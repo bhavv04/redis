@@ -1,182 +1,180 @@
-# Welcome to My Cpp Redis Server
-***
+# My C++ Redis Server
 
-**Step‑by‑Step Video Tutorial:** Watch the full implementation from start to finish on YouTube:\
-[Build Your Own Redis Server in C++](https://youtube.com/playlist?list=PL6F3pyVdiAkfr4HaJXNrQDviFJNUWahgI&si=145SP0xehVBxciS0) \
-*The full playlist will be available on May 11.*
+A lightweight Redis-compatible in-memory data store written in C++. Supports strings, lists, and hashes with full Redis Serialization Protocol (RESP) parsing, multi-client concurrency, and periodic disk persistence.
 
----
+## Features
 
-## Task
-A lightweight Redis-compatible in-memory data store written in C++. Supports strings, lists, and hashes, full Redis Serialization Protocol (RESP) parsing, multi-client concurrency, and periodic disk persistence.
+- **Redis-Compatible Protocol**: Full RESP parsing support
+- **Multi-Client Concurrency**: Each client handled in separate threads
+- **Data Types**: Strings, Lists, and Hashes
+- **Persistence**: Automatic disk dumps every 5 minutes and on shutdown
+- **TTL Support**: Key expiration with lazy eviction
+- **Thread-Safe**: Mutex-protected data stores
 
----
+## Quick Start
 
-## Description
-**Name:** `my_redis_server`  
-**Default Port:** `6379`  
+### Prerequisites
 
-This project implements a Redis clone in C++, providing common Redis commands over a plain TCP socket using the RESP protocol. It supports:
+- C++17 (or later) compiler
+- POSIX-compatible system (Linux, macOS)
+- Make (optional)
 
-- **Common Commands:** PING, ECHO, FLUSHALL
-- **Key/Value:** SET, GET, KEYS, TYPE, DEL/UNLINK, EXPIRE, RENAME
-- **List:** LGET, LLEN, LPUSH/RPUSH (multi-element), LPOP/RPOP, LREM, LINDEX, LSET
-- **Hash:** HSET, HGET, HEXISTS, HDEL, HKEYS, HVALS, HLEN, HGETALL, HMSET
-
-Data is automatically dumped to `dump.my_rdb` every 300 seconds and on graceful shutdown; at startup, the server attempts to load from this file.
-
----
-
-## Repository Structure
-
-```
-├── include/                # Public headers
-│   ├── RedisCommandHandler.h
-│   ├── RedisDatabase.h
-│   └── RedisServer.h
-├── src/                    # Implementation files
-│   ├── RedisCommandHandler.cpp
-│   ├── RedisDatabase.cpp
-│   ├── RedisServer.cpp
-│   └── main.cpp            # Entry point
-├── Concepts,UseCases&Tests.md    # Design concepts and command use cases
-├── Makefile                # Build rules
-├── README.md               # This documentation
-└── test_all.sh             # Bash script for all tests
-```
-
----
-
-## Installation
-This project uses a simple Makefile. Ensure you have a C++17 (or later) compiler.
-- `make`
-- `make clean`
+### Build
 
 ```bash
-# from project root
+# Using Makefile (recommended)
 make
-```
 
-Or compile manually:
-```bash
+# Or compile manually
 g++ -std=c++17 -pthread -Iinclude src/*.cpp -o my_redis_server
 ```
 
----
-
-## Usage
-After compiling the server, you can run it and use with client.
-
-### Running the Server
-
-Start the server on the default port (6379) or specify a port:
+### Run
 
 ```bash
-./my_redis_server            # listens on 6379
-./my_redis_server 6380       # listens on 6380
+# Default port (6379)
+./my_redis_server
+
+# Custom port
+./my_redis_server 6380
 ```
 
-On startup, the server attempts to load `dump.my_rdb` if present:
-```
-Database Loaded From dump.my_rdb
-# or
-No dump found or load failed; starting with an empty database.
-```
-
-A background thread dumps the database every 5 minutes.
-
-To gracefully shutdown and persist immediately, press `Ctrl+C`.
-
----
-
-### Using the Server
-
-You can connect with the standard `redis-cli` or custom RESP client `my_redis_cli`.
+### Connect
 
 ```bash
-# Using redis-cli:
+# Using redis-cli
 redis-cli -p 6379
 
-# Example session:
+# Example commands
 127.0.0.1:6379> PING
 PONG
-
-127.0.0.1:6379> SET foo "bar"
+127.0.0.1:6379> SET mykey "Hello World"
 OK
-
-127.0.0.1:6379> GET foo
-"bar"
+127.0.0.1:6379> GET mykey
+"Hello World"
 ```
-
----
 
 ## Supported Commands
 
-### Common
-- **PING**: `PING` → `PONG`
-- **ECHO**: `ECHO <msg>` → `<msg>`
-- **FLUSHALL**: `FLUSHALL` → clear all data
+### General Commands
+- `PING` - Test server connectivity
+- `ECHO <message>` - Echo a message
+- `FLUSHALL` - Clear all data
 
-### Key/Value
-- **SET**: `SET <key> <value>` → store string
-- **GET**: `GET <key>` → retrieve string or nil
-- **KEYS**: `KEYS *` → list all keys
-- **TYPE**: `TYPE <key>` → `string`/`list`/`hash`/`none`
-- **DEL/UNLINK**: `DEL <key>` → delete key
-- **EXPIRE**: `EXPIRE <key> <seconds>` → set TTL
-- **RENAME**: `RENAME <old> <new>` → rename key
+### String Operations
+- `SET <key> <value>` - Store a string value
+- `GET <key>` - Retrieve a string value
+- `DEL <key>` / `UNLINK <key>` - Delete a key
+- `KEYS *` - List all keys
+- `TYPE <key>` - Get the data type of a key
+- `EXPIRE <key> <seconds>` - Set key expiration
+- `RENAME <oldkey> <newkey>` - Rename a key
 
-### Lists
-- **LGET**: `LGET <key>` → all elements
-- **LLEN**: `LLEN <key>` → length
-- **LPUSH/RPUSH**: `LPUSH <key> <v1> [v2 ...]` / `RPUSH` → push multiple
-- **LPOP/RPOP**: `LPOP <key>` / `RPOP <key>` → pop one
-- **LREM**: `LREM <key> <count> <value>` → remove occurrences
-- **LINDEX**: `LINDEX <key> <index>` → get element
-- **LSET**: `LSET <key> <index> <value>` → set element
+### List Operations
+- `LGET <key>` - Get all elements from a list
+- `LLEN <key>` - Get list length
+- `LPUSH <key> <value1> [value2 ...]` - Push to list head
+- `RPUSH <key> <value1> [value2 ...]` - Push to list tail
+- `LPOP <key>` - Pop from list head
+- `RPOP <key>` - Pop from list tail
+- `LINDEX <key> <index>` - Get element at index
+- `LSET <key> <index> <value>` - Set element at index
+- `LREM <key> <count> <value>` - Remove elements
 
-### Hashes
-- **HSET**: `HSET <key> <field> <value>`
-- **HGET**: `HGET <key> <field>`
-- **HEXISTS**: `HEXISTS <key> <field>`
-- **HDEL**: `HDEL <key> <field>`
-- **HLEN**: `HLEN <key>` → field count
-- **HKEYS**: `HKEYS <key>` → all fields
-- **HVALS**: `HVALS <key>` → all values
-- **HGETALL**: `HGETALL <key>` → field/value pairs
-- **HMSET**: `HMSET <key> <f1> <v1> [f2 v2 ...]`
+### Hash Operations
+- `HSET <key> <field> <value>` - Set hash field
+- `HGET <key> <field>` - Get hash field value
+- `HEXISTS <key> <field>` - Check if field exists
+- `HDEL <key> <field>` - Delete hash field
+- `HLEN <key>` - Get number of fields
+- `HKEYS <key>` - Get all field names
+- `HVALS <key>` - Get all field values
+- `HGETALL <key>` - Get all field-value pairs
+- `HMSET <key> <field1> <value1> [field2 value2 ...]` - Set multiple fields
 
----
+## Architecture
 
-## Design & Architecture
+### Core Components
 
-- **Concurrency:** Each client is handled in its own `std::thread`.  
-- **Synchronization:** A single `std::mutex db_mutex` guards all in-memory stores.  
-- **Data Stores:**  
-  - `kv_store` (`unordered_map<string,string>`) for strings  
-  - `list_store` (`unordered_map<string,vector<string>>`) for lists  
-  - `hash_store` (`unordered_map<string,unordered_map<string,string>>`) for hashes
-- **Expiration:** Lazy eviction on each access via `purgeExpired()`, plus TTL map `expiry_map`.  
-- **Persistence:** Simplified RDB: text‐based dump/load in `dump.my_rdb`.  
-- **Singleton Pattern:** `RedisDatabase::getInstance()` enforces one shared instance.  
-- **RESP Parsing:** Custom parser in `RedisCommandHandler` supports both inline and array formats.
+- **RedisServer**: TCP socket handling and client management
+- **RedisDatabase**: Thread-safe data storage (singleton pattern)
+- **RedisCommandHandler**: RESP protocol parsing and command execution
 
----
+### Data Storage
 
-## Concepts & Use Cases
+- **String Store**: `unordered_map<string, string>`
+- **List Store**: `unordered_map<string, vector<string>>`
+- **Hash Store**: `unordered_map<string, unordered_map<string, string>>`
+- **Expiry Map**: TTL tracking for automatic key expiration
 
-Refer to [Concepts,UseCases&Tests.md](Concepts,UseCases&Tests.md) for a detailed description of the underlying concepts (TCP sockets, RESP, data structures, etc.) and real‑world usage scenarios for each command.
+### Concurrency Model
 
----
+- One thread per client connection
+- Single global mutex (`db_mutex`) protecting all data stores
+- Lazy expiration on key access
 
-## Testing
+## Persistence
 
-You can verify functionality interactively or via scripts. See the test examples in `Concepts,UseCases&Tests.md` or use the provided `test_all.sh` script for end‑to‑end validation.
+The server automatically saves data to `dump.my_rdb`:
+- Every 300 seconds (5 minutes) via background thread
+- On graceful shutdown (Ctrl+C)
+- Loads existing dump file on startup
 
----
+## Project Structure
 
-### The Core Team
-Selcuk Ata Aksoy 
+```
+├── include/                     # Header files
+│   ├── RedisCommandHandler.h
+│   ├── RedisDatabase.h
+│   └── RedisServer.h
+├── src/                         # Implementation files
+│   ├── RedisCommandHandler.cpp
+│   ├── RedisDatabase.cpp
+│   ├── RedisServer.cpp
+│   └── main.cpp
+├── Makefile                     # Build configuration
+├── README.md                    # This file
+├── Concepts,UseCases&Tests.md   # Design documentation
+└── test_all.sh                  # Test script
+```
 
-<span><i>Made at <a href='https://qwasar.io'>Qwasar SV -- Software Engineering School</a></i></span>
-<span><img alt='Qwasar SV -- Software Engineering School's Logo' src='https://storage.googleapis.com/qwasar-public/qwasar-logo_50x50.png' width='20px' /></span>
+## Development
+
+### Building from Source
+
+1. Clone the repository
+2. Navigate to project directory
+3. Run `make` to build
+4. Run `make clean` to clean build artifacts
+
+### Testing
+
+Run the provided test script:
+```bash
+./test_all.sh
+```
+
+Or test manually with `redis-cli` or any RESP-compatible client.
+
+## Configuration
+
+- **Default Port**: 6379
+- **Persistence File**: `dump.my_rdb`
+- **Auto-save Interval**: 300 seconds
+- **Protocol**: Redis RESP (REdis Serialization Protocol)
+
+## Limitations
+
+- Single-threaded command execution (per client)
+- Text-based persistence format (simplified RDB)
+- Memory-only storage (no disk-based datasets)
+- Subset of Redis commands implemented
+
+
+## License
+
+This project is for educational purposes. See the video series for detailed explanations of concepts and implementation decisions.
+
+**Server Name**: `my_redis_server`  
+**Default Port**: `6379`  
+**Protocol**: Redis RESP
